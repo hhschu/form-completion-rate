@@ -2,6 +2,8 @@
 
 This project trains an XGBoost tree model to predict the completion rate of a form. (The percentage of users would submit after viewing the form). And expose the model with a RESTFul API built with FastAPI.
 
+Please see the `modelling.ipynb` for the modelling process.
+
 ## Train a model
 
 To train and export a model, run
@@ -58,9 +60,11 @@ This is a fairly simple service. At the minimum, 1 virtual machine instance can 
 
 Ideally, both the training data and models should be saved in a blob storage such as S3. This way, they can be easily shared among different instances, and make the instance truly stateless.
 
-To better manage the API service, and to scale up further, we can also put a load balancer in front of the API instances. Or with both training and inference processes are containerised, we can also deploy them to a managed Kubernetes cluster, EKS for example, and store the image in a private image repository, such as ECR.
+To better manage the API service, and to scale up further, we can also put a load balancer in front of the API instances. Or even a manged API service such as AWS API Gateway. With both training and inference processes are containerised, we can also deploy them to a managed Kubernetes cluster, EKS for example, and store the image in a private image repository, such as ECR.
 
 At last, there are managed model serving platforms that help to serve the models. For instance, AWS' SageMaker and GCP's AI Platform. This probably comes with a higher cost but can save some management effort.
+
+In terms of transfroming data, in this example I only use scikit learn and pandas. If the size of data is larger, we can also use Spark to run transformation. Spark also has XGBoost algorithm, so it can also be used to run batch prediction, like what [Uber does](https://eng.uber.com/productionizing-distributed-xgboost/).
 
 Usually, the cloud platform also provides the monitoring and logging service, for example, CloudWatch and Stackdriver. We can use these services to monitor the health of our instances and keeping logs. Or we can use 3rd party services like Datadog or open-source projects like Prometheus.
 
