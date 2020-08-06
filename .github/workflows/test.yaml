@@ -1,0 +1,27 @@
+name: Python test
+
+on: [pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Install dependencies
+        run: |
+          pip install pipenv
+          pipenv install --system --dev
+      - name: Lint with flake8
+        run: |
+          flake8 --count --show-source --statistics --ignore=E121,E126,E203,E402,E501,E731,W503 --max-line-length=80
+      - name: Type check with mypy
+        run: |
+          mypy app --show-error-context --pretty
+      - name: Checking format with clack
+        run: |
+          black --check

@@ -32,4 +32,5 @@ repos:
     rev: v0.782
     hooks:
       - id: mypy
+        args: ["--show-error-context", "--pretty"]
         exclude: tests/*
