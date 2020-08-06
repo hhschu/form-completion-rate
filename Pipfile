@@ -1,0 +1,31 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+black = "*"
+flake8 = "*"
+flake8-bugbear = "*"
+mypy = "*"
+pre-commit = "*"
+pytest = "*"
+pytest-coverage = "*"
+
+[packages]
+jupyter = "*"
+pandas = "*"
+fastapi = "*"
+altair = "*"
+scikit-learn = "*"
+xgboost = "*"
+bayesian-optimization = "*"
+pydantic = "*"
+ujson = "*"
+uvicorn = "*"
+
+[requires]
+python_version = "3.8"
+
+[pipenv]
+allow_prereleases = true
