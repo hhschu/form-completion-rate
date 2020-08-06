@@ -1,6 +1,7 @@
 from typing import List, Tuple
 
 import pandas as pd
+from sklearn.preprocessing import StandardScaler
 
 
 class Processor:
@@ -8,6 +9,7 @@ class Processor:
 
     def __init__(self) -> None:
         self.features: List[str] = []
+        self.standardiser = StandardScaler()
 
     def __getstate__(self) -> dict:
         state = self.__dict__.copy()
@@ -31,8 +33,18 @@ class Processor:
         infer :
             Model of the pipeline. If it's inferance.
         """
+        y = None
         if not infer:
             data["completion_rate"] = data["submissions"] / data["views"]
             self.select_features(data)
-            return data[self.features], data["completion_rate"]
-        return data[self.features]
+            y = data.pop("completion_rate")
+        X = data[self.features]
+
+        if not infer:
+            self.standardiser.fit(X)
+        X = self.standardiser.transform(X)
+
+        if not infer:
+            assert y is not None
+            return X, y
+        return X
