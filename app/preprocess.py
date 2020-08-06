@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import List, Tuple
 
 import pandas as pd
 
@@ -7,7 +7,7 @@ class Processor:
     """The data preprocessing pipeline."""
 
     def __init__(self) -> None:
-        self.features = []
+        self.features: List[str] = []
 
     def __getstate__(self) -> dict:
         state = self.__dict__.copy()

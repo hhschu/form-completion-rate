@@ -6,16 +6,15 @@ Environment variables:
 """
 
 import os
-from pathlib import Path
-from collections import OrderedDict
 import pickle
+from collections import OrderedDict
+from pathlib import Path
 
 import pandas as pd
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
 import xgboost as xgb
-
-from preprocess import Processor
+from fastapi import FastAPI, HTTPException
+from preprocess import Processor  # noqa: F401
+from pydantic import BaseModel
 
 MODEL_DIR = Path(os.environ.get("MODEL_DIR", "model"))
 
@@ -27,7 +26,7 @@ class LRU(OrderedDict):
     """
 
     def __init__(self, *args, **kwds) -> None:
-        self.maxsize = os.environ.get("MAX_NUM_MODELS", 1)
+        self.maxsize = int(os.environ.get("MAX_NUM_MODELS", 1))
         super().__init__(*args, **kwds)
 
     def __setitem__(self, key, value) -> None:
@@ -44,6 +43,7 @@ class LRU(OrderedDict):
 
 class Record(BaseModel):
     """Features of a form."""
+
     feat_01: int
     feat_02: int
     feat_03: int
@@ -95,11 +95,13 @@ class Record(BaseModel):
 
 class ModelID(BaseModel):
     """ID of the model."""
+
     model_id: int
 
 
 class Score(BaseModel):
     """Probablity of submition."""
+
     score: float
 
 
@@ -127,10 +129,10 @@ def _load_model(model_id: int = None) -> None:
     bst = xgb.Booster()
     bst.load_model(model_file)
     model = {"model": bst}
-    processor = model_file.with_suffix('.processor')
+    processor = model_file.with_suffix(".processor")
     if processor.exists():
-        with processor.open('rb') as inf:
-            model['processor'] = pickle.load(inf)
+        with processor.open("rb") as inf:
+            model["processor"] = pickle.load(inf)
 
     Models[model_id] = model
 
@@ -154,7 +156,7 @@ def infer(model: dict, record: Record) -> float:
         after viewing.
     """
     df = pd.DataFrame(dict(record), index=[0])
-    if processor := model.get('processor'):
+    if processor := model.get("processor"):
         df = processor.pipe(df, infer=True)
     data = xgb.DMatrix(df)
     result = model["model"].predict(data)
@@ -175,7 +177,7 @@ def infer_with_latest_model(record: Record):
     """Preidct completion rate with the default model."""
     model = Models.latest()
     score = infer(model, record)
-    return {'score': score}
+    return {"score": score}
 
 
 @app.post("/infer/{model_id}", response_model=Score)
@@ -185,7 +187,7 @@ def infer_with_model_id(model_id: int, record: Record):
         raise HTTPException(status_code=404, detail=f"Model {model_id} not found")
     model = Models[model_id]
     score = infer(model, record)
-    return {'score': score}
+    return {"score": score}
 
 
 @app.post("/load/{model_id}", response_model=ModelID)

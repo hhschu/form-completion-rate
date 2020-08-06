@@ -1,17 +1,16 @@
 """Train the prediction model."""
 import argparse
 import logging
-import time
 import pickle
-from pathlib import Path
+import time
 from functools import partial
+from pathlib import Path
 from typing import Callable, Dict, Tuple
 
 import pandas as pd
+import preprocess
 import xgboost as xgb
 from bayes_opt import BayesianOptimization
-
-import preprocess
 
 logger = logging.getLogger("training")
 logger.setLevel(logging.DEBUG)
@@ -66,7 +65,7 @@ def cv(
     if "max_depth" in other_params:
         other_params["max_depth"] = int(other_params["max_depth"])
 
-    params = {**params, **other_params}
+    params = {**(params or {}), **other_params}
     result = xgb.cv(params, data, num_boost_round=num_boost_round, nfold=nfold)
     return -1 * result[f"test-{params['eval_metric']}-mean"].iloc[-1]
 
@@ -182,10 +181,12 @@ def main(flags) -> None:
     optimised_params = optimise_hyper_params(func, pbounds)
     if "max_depth" in optimised_params:
         optimised_params["max_depth"] = int(optimised_params["max_depth"])
+
     model = train(
         data, params={**params, **optimised_params}, num_boost_round=flags.steps,
     )
-    export(model, processor, flags.output)
+
+    export(model=model, processer=processor, path=flags.output)
 
 
 if __name__ == "__main__":
