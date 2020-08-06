@@ -15,10 +15,10 @@ where `$(pwd)/data` is the folder training data is kept and `$(pwd)/model` is th
 
 There are 4 arguments:
 
-`--data`: the path of the training data CSV file.
-`--output`: the path of the folder to store the model.
-`--steps`: number of boost round of the XGBoost model.
-`-v`: verbose.
+* `--data`: the path of the training data CSV file.
+* `--output`: the path of the folder to store the model.
+* `--steps`: number of boost round of the XGBoost model.
+* `-v`: verbose.
 
 ## Run the API server
 
@@ -33,10 +33,10 @@ where `$(pwd)/model` is the folder where models are kept.
 
 The API has 3 endpoints:
 
-`GET /`: heartbeat, returns ok.
-`POST /predict`: returns the predicted completion rate of a form.
-`POST /predict/{model_id}`: returns the predicted completion rate of a form with a specific model.
-`POST /load/{model_id}`: load a new model into memory.
+* `GET /`: heartbeat, returns ok.
+* `POST /predict`: returns the predicted completion rate of a form.
+* `POST /predict/{model_id}`: returns the predicted completion rate of a form with a specific model.
+* `POST /load/{model_id}`: load a new model into memory.
 
 An auto-generated API document can be found at `http://127.0.0.1/docs`.
 
@@ -44,11 +44,16 @@ An auto-generated API document can be found at `http://127.0.0.1/docs`.
 
 ## Q&A
 
-1. Analyze the results and document the assumptions and modelling decisions.
+1. **Analyze the results and document the assumptions and modelling decisions.**
+
 Please see the notebook `modelling.ipynb`.
-2. A simple http API to serve online predictions. The API should be able to handle 1,500 POST requests per minute.
+
+2. **A simple http API to serve online predictions. The API should be able to handle 1,500 POST requests per minute.**
+
 The API can process ~2,400 POST requests per second. Please refer to the Benchmark section for a detailed benchmarking result with `wrk`.
-3. A detailed description of the architecture required to run the pipeline and serve the model through the http API in a cloud environment such as AWS.
+
+3. **A detailed description of the architecture required to run the pipeline and serve the model through the http API in a cloud environment such as AWS.**
+
 This is a fairly simple service. At the minimum, 1 virtual machine instance can fulfill all the requirements (EC2). We can even use a spot instance to lower the cost, since the training time is short and serving API request is a stateless task. Even if the training time is long, we can still periodically export the training status to be able to utilise a spot instance.
 
 Ideally, both the training data and models should be saved in a blob storage such as S3. This way, they can be easily shared among different instances, and make the instance truly stateless.
@@ -58,7 +63,9 @@ To better manage the API service, and to scale up further, we can also put a loa
 At last, there are managed model serving platforms that help to serve the models. For instance, AWS' SageMaker and GCP's AI Platform. This probably comes with a higher cost but can save some management effort.
 
 Usually, the cloud platform also provides the monitoring and logging service, for example, CloudWatch and Stackdriver. We can use these services to monitor the health of our instances and keeping logs. Or we can use 3rd party services like Datadog or open-source projects like Prometheus.
-4. A description of metrics to capture if the http API had to be instrumented.
+
+4. **A description of metrics to capture if the http API had to be instrumented.**
+
 To monitor the API, we should capture:
 - the number of requests
 - the response time
@@ -69,6 +76,8 @@ To monitor the API, we should capture:
 - the payload to check if the data is drifting
 
 ## Benchmark
+
+The API performance measured with [wrk](https://github.com/wg/wrk).
 
 ```sh
 ❯ wrk -s wrk.lua -t12 -c400 -d30s http://127.0.0.1/infer
