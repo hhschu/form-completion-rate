@@ -5,9 +5,8 @@ Environment variables:
 - MAX_NUM_MODELS: Maxium number of models sustained at the same time. Default 1.
 """
 import logging
-import random
-import string
 import time
+import uuid
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.gzip import GZipMiddleware
@@ -24,7 +23,7 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
-    idem = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    idem = str(uuid.uuid4())
     logger.info(f"rid={idem} start request path={request.url.path}")
     start_time = time.time()
 
