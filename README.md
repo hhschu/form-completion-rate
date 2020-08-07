@@ -2,15 +2,15 @@
 
 This project trains an XGBoost tree model to predict the completion rate of a form. (The percentage of users would submit after viewing the form). And expose the model with a RESTFul API built with FastAPI.
 
-Please see the `modelling.ipynb` for the modelling process.
+Please see the [modelling.ipynb](https://github.com/hhschu/form-completion-rate/blob/master/modelling.ipynb) for the modelling process.
 
 ## Train a model
 
 To train and export a model, run
 
 ```sh
-docker build -f Dockerfile.train -t train .
-docker run -it --rm --name training-service -v $(pwd)/model:/app/model -v $(pwd)/data:/app/data train --data /app/data/completion_rate.csv --output /app/model/ --steps 10
+docker build -f Dockerfile.estimator -t training .
+docker run -it --rm --name training-service -v $(pwd)/model:/app/model -v $(pwd)/data:/app/data training --data /app/data/completion_rate.csv --output /app/model/ --steps 20
 ```
 
 where `$(pwd)/data` is the folder training data is kept and `$(pwd)/model` is the folder where the model will be stored. (You may need to increase the available memory size for the Docker VM.)
@@ -27,20 +27,21 @@ There are 4 arguments:
 To start the API server, run
 
 ```sh
-docker build -f Dockerfile.serve -t service .
-docker run -it --rm --name prediction-service -v $(pwd)/model:/app/model -p 80:80 service
+docker build -f Dockerfile.api -t serving .
+docker run -it --rm --name prediction-service -v $(pwd)/model:/app/model -p 80:80 serving
 ```
 
 where `$(pwd)/model` is the folder where models are kept.
 
-The API has 3 endpoints:
+The API has 5 endpoints:
 
 * `GET /`: heartbeat, returns ok.
+* `GET /predict`: returns all available model versions.
 * `POST /predict`: returns the predicted completion rate of a form.
-* `POST /predict/{model_id}`: returns the predicted completion rate of a form with a specific model.
-* `POST /load/{model_id}`: load a new model into memory.
+* `POST /predict/{version}`: returns the predicted completion rate of a form with a specific model version.
+* `POST /load/{version}`: load a new model into memory.
 
-An auto-generated API document can be found at `http://127.0.0.1/docs`.
+An auto-generated API document can also be found at [http://127.0.0.1/docs](http://127.0.0.1/docs).
 
 ## Contribution
 
@@ -48,7 +49,7 @@ An auto-generated API document can be found at `http://127.0.0.1/docs`.
 
 1. **Analyze the results and document the assumptions and modelling decisions.**
 
-Please see the notebook `modelling.ipynb`.
+Please see the notebook [modelling.ipynb](https://github.com/hhschu/form-completion-rate/blob/master/modelling.ipynb).
 
 2. **A simple http API to serve online predictions. The API should be able to handle 1,500 POST requests per minute.**
 
@@ -86,12 +87,12 @@ The API performance measured with [wrk](https://github.com/wg/wrk).
 ```sh
 ❯ wrk -s wrk.lua -t12 -c400 -d30s http://127.0.0.1/infer
 Running 30s test @ http://127.0.0.1/infer
- 12 threads and 400 connections
- Thread Stats Avg Stdev Max +/- Stdev
- Latency 166.17ms 110.68ms 883.15ms 73.53%
- Req/Sec 206.72 81.29 484.00 64.07%
- 74028 requests in 30.07s, 11.08MB read
- Socket errors: connect 0, read 247, write 0, timeout 0
-Requests/sec: 2462.26
-Transfer/sec: 377.52KB
+  12 threads and 400 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   206.51ms   87.86ms 608.59ms   72.17%
+    Req/Sec   152.52     43.25   310.00     68.79%
+  54788 requests in 30.10s, 8.20MB read
+  Socket errors: connect 0, read 322, write 0, timeout 0
+Requests/sec:   1820.19
+Transfer/sec:    279.07KB
 ```

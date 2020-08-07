@@ -1,14 +1,16 @@
 FROM python:3.8-slim
 
 WORKDIR /app
+
 COPY docker-entrypoint.sh docker-entrypoint.sh
-COPY requirements-train.txt requirements.txt
+COPY requirements-estimator.txt requirements.txt
 
 RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 && \
     rm -rf /var/lib/apt/lists/* /tmp/* && \
     pip install --no-cache-dir -qq -r requirements.txt
 
-COPY ./app/train.py train.py
-COPY ./app/preprocess.py preprocess.py
+COPY ./app/estimator /app
 
-ENTRYPOINT [ "/app/docker-entrypoint.sh" ]
+ENV PYTHONPATH=.
+
+ENTRYPOINT [ "docker-entrypoint.sh" ]

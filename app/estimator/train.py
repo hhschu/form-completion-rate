@@ -1,16 +1,17 @@
-"""Train the prediction model."""
+"""Run this file to train the prediction model."""
 import argparse
 import logging
 import pickle
 import time
 from functools import partial
 from pathlib import Path
-from typing import Callable, Dict, Tuple
+from typing import Any, Callable, Dict, Tuple
 
 import pandas as pd
-import preprocess
 import xgboost as xgb
 from bayes_opt import BayesianOptimization
+
+from .preprocess import Processor
 
 logger = logging.getLogger("training")
 logger.setLevel(logging.DEBUG)
@@ -22,7 +23,7 @@ parser.add_argument("--output", help="Path to the location to save the model.")
 parser.add_argument("-v", "--verbose", action="store_true", help="Print more logs.")
 
 
-def load_data(path) -> pd.DataFrame:
+def load_data(path: str) -> pd.DataFrame:
     """Load the training CSV dataset.
 
     Parameters
@@ -42,8 +43,8 @@ def cv(
     data: xgb.DMatrix,
     num_boost_round: int,
     nfold: int,
-    params: dict = None,
-    **other_params,
+    params: Dict[str, Any] = None,
+    **other_params: Any,
 ) -> float:
     """Run cross-validation on RMSE.
 
@@ -138,9 +139,7 @@ def train(data: xgb.DMatrix, params: dict, num_boost_round: int) -> xgb.Booster:
     return model
 
 
-def export(
-    model: xgb.Booster, path: str, processer: preprocess.Processor = None
-) -> None:
+def export(model: xgb.Booster, path: str, processer: Processor = None) -> None:
     """Export the prediction model.
 
     Parameters
@@ -161,9 +160,9 @@ def export(
             pickle.dump(processer, outf)
 
 
-def main(flags) -> None:
+def main(flags: argparse.Namespace) -> None:
     raw_data = load_data(flags.data)
-    processor = preprocess.Processor()
+    processor = Processor()
     X, y = processor.pipe(raw_data, infer=False)
     data = xgb.DMatrix(X, label=y)
 

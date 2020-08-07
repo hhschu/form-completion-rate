@@ -1,3 +1,5 @@
+"""Data preprocessing pipeline."""
+
 from typing import List, Tuple
 
 import pandas as pd

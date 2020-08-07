@@ -1,9 +1,11 @@
 FROM tiangolo/uvicorn-gunicorn-fastapi:python3.8-slim
 
-COPY requirements-serve.txt /app/requirements.txt
+COPY requirements-api.txt requirements.txt
 
 RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 && \
     rm -rf /var/lib/apt/lists/* /tmp/* && \
-    pip install --no-cache-dir -qq -r /app/requirements.txt
+    pip install --no-cache-dir -qq -r requirements.txt
 
-COPY ./app/main.py,./app/preprocess.py /app/
+ENV PYTHONPATH=/
+
+COPY ./app /app
