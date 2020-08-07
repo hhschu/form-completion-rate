@@ -10,8 +10,7 @@ from typing import Any, Callable, Dict, Tuple
 import pandas as pd
 import xgboost as xgb
 from bayes_opt import BayesianOptimization
-
-from .preprocess import Processor
+from preprocess import Processor  # type: ignore
 
 logger = logging.getLogger("training")
 logger.setLevel(logging.DEBUG)
@@ -32,10 +31,12 @@ def load_data(path: str) -> pd.DataFrame:
         The path of the CSV data file.
     """
     start = time.time()
-    p = Path(path)
+    p = Path(path).resolve()
+    if not (p.is_file and p.exists()):
+        raise FileNotFoundError(p)
     df = pd.read_csv(p)
     duration = time.time() - start
-    logger.info(f"{len(df):,} rows loaded from {p.resolve()} in {duration:.2f} seconds")
+    logger.info(f"{len(df):,} rows loaded from {p} in {duration:.2f} seconds")
     return df
 
 
