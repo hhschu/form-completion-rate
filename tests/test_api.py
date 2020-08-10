@@ -38,7 +38,7 @@ def test_load_model(client):
     response = client.post("/load/1596729183", json={}, allow_redirects=True)
 
     assert response.status_code == 200
-    assert list(app.api.Models.keys()) == ["1596729183"]
+    assert list(app.api.Models.keys()) == [1596729183]
 
 
 @mark.dependency(depends=["test_load_model"])

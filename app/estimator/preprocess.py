@@ -2,6 +2,7 @@
 
 from typing import List, Tuple
 
+import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 
@@ -37,7 +38,9 @@ class Processor:
         """
         y = None
         if not infer:
-            data["completion_rate"] = data["submissions"] / data["views"]
+            data["completion_rate"] = wilson_lower_bound(
+                data["submissions"], data["views"]
+            )
             self.select_features(data)
             y = data.pop("completion_rate")
         X = data[self.features]
@@ -50,3 +53,30 @@ class Processor:
             assert y is not None
             return X, y
         return X
+
+
+def wilson_lower_bound(
+    submissions: np.array, views: np.array, z: float = 1.96
+) -> np.array:
+    """Calculate the lower confidance interval of Wilson score.
+
+    Parameters
+    ----------
+    submissions :
+        Number of submission, the numerator.
+    views :
+        Number of views, the denominator.
+    z :
+        Standard score. Default 1.96, 95% confidence interval.
+
+    Returns
+    -------
+    np.array
+        The Wilson score adjuscted completion rate.
+    """
+    phat = submissions / views
+    return (
+        phat
+        + z * z / (2 * views)
+        - z * np.sqrt((phat * (1 - phat) + z * z / (4 * views)) / views)
+    ) / (1 + z * z / views)
