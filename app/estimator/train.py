@@ -64,10 +64,12 @@ def cv(
         to be provided in the optimise_hyper_params()
         function.
     """
-    if "max_depth" in other_params:
-        other_params["max_depth"] = int(other_params["max_depth"])
-
     params = {**(params or {}), **other_params}
+    if "max_depth" in params:
+        params["max_depth"] = int(params["max_depth"])
+    if "eval_metric" not in params:
+        raise ValueError("missing 'eval_metric' in param")
+
     result = xgb.cv(params, data, num_boost_round=num_boost_round, nfold=nfold)
     return -1 * result[f"test-{params['eval_metric']}-mean"].iloc[-1]
 
@@ -142,25 +144,29 @@ def train(data: xgb.DMatrix, params: dict, num_boost_round: int) -> xgb.Booster:
     return model
 
 
-def export(model: xgb.Booster, path: str, processer: Processor = None) -> None:
+def export(model: xgb.Booster, processor: Processor = None, path: str = None) -> None:
     """Export the prediction model.
 
     Parameters
     ----------
     model :
         The model to be exported.
-    path :
-        Path of the folder to save the model.
-    processer : (optional)
+    processor : (optional)
         The accompany data preprocessor of the model.
+    path : (optinal)
+        Path of the folder to save the model. Default current directory.
     """
-    ts = int(time.time())
-    p = Path(path)
-    logger.info(f"exporting model and processer to {p.resolve()}")
-    model.save_model(str(p / f"{ts}.model"))
-    if processer:
-        with (p / f"{ts}.processor").open("wb") as outf:
-            pickle.dump(processer, outf)
+    start = time.time()
+    p = Path(path or "")
+    versiont = int(start)
+    model.save_model(str(p / f"{versiont}.model"))
+    if processor:
+        with (p / f"{versiont}.processor").open("wb") as outf:
+            pickle.dump(processor, outf)
+    duration = time.time() - start
+    logger.info(
+        f"exporting model and processor to {p.resolve()} in {duration:.2f} seconds"
+    )
 
 
 def main(flags: argparse.Namespace) -> None:
@@ -193,7 +199,7 @@ def main(flags: argparse.Namespace) -> None:
         data, params={**params, **optimised_params}, num_boost_round=flags.steps,
     )
 
-    export(model=model, processer=processor, path=flags.output)
+    export(model=model, processor=processor, path=flags.output)
 
 
 if __name__ == "__main__":
