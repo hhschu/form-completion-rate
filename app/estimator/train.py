@@ -77,7 +77,7 @@ def optimise_hyper_params(
     bounds: Dict[str, Tuple[float, float]],
     init_points: int = 3,
     n_iter: int = 5,
-) -> Dict[str, float]:
+) -> Dict[str, Any]:
     """Optimise hyper-parameters with Bayesian method.
 
     Parameters
@@ -109,10 +109,12 @@ def optimise_hyper_params(
     start = time.time()
     optimizer = BayesianOptimization(f=func, pbounds=bounds)
     optimizer.maximize(init_points=init_points, n_iter=n_iter)
-    params = optimizer.res[-1]["params"]
+    max_point = optimizer.max
     duration = time.time() - start
-    logger.info(f"best hyper-parameter {params} found in {duration:.2f} seconds.")
-    return params
+    logger.info(
+        f"best hyper-parameter {max_point['params']} found in {duration:.2f} seconds."
+    )
+    return max_point
 
 
 def train(data: xgb.DMatrix, params: dict, num_boost_round: int) -> xgb.Booster:
@@ -178,7 +180,12 @@ def main(flags: argparse.Namespace) -> None:
         "subsample": (0.4, 1.0),
         "colsample_bytree": (0.4, 1.0),
     }
-    optimised_params = optimise_hyper_params(func, pbounds)
+    optimised_point = optimise_hyper_params(func, pbounds)
+    loss = -optimised_point["target"]
+    loss_threshold = 0.2
+    assert loss <= loss_threshold, f"RMSE {loss} too high. (> {loss_threshold})"
+
+    optimised_params = optimised_point["params"]
     if "max_depth" in optimised_params:
         optimised_params["max_depth"] = int(optimised_params["max_depth"])
 
