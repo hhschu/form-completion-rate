@@ -12,7 +12,7 @@ router = APIRouter()
 @router.get("/", response_model=Versions)
 async def list_available_model_ids():
     """Preidct completion rate with the default model."""
-    return {"model_ids": list(Models.keys())}
+    return {"versions": list(Models.keys())}
 
 
 @router.post("/", response_model=Score)

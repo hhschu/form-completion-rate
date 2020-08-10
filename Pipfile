@@ -11,6 +11,9 @@ mypy = "*"
 pre-commit = "*"
 pytest = "*"
 pytest-coverage = "*"
+requests = "*"
+pytest-mock = "*"
+pytest-dependency = "*"
 
 [packages]
 jupyter = "*"

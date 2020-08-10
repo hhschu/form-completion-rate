@@ -5,15 +5,18 @@ Environment variables:
 - MAX_NUM_MODELS: Maxium number of models sustained at the same time. Default 1.
 """
 import logging
+import logging.config
 import time
 import uuid
+from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.gzip import GZipMiddleware
 
 from app.api.routes import infer, load
 
-logging.config.fileConfig("logging.cfg", disable_existing_loggers=False)  # type: ignore
+logging_cfg = Path(__file__).parent / "logging.cfg"
+logging.config.fileConfig(logging_cfg, disable_existing_loggers=False)
 logger = logging.getLogger("serving")
 
 app = FastAPI()

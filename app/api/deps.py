@@ -45,10 +45,10 @@ class LRUModelContainer(OrderedDict):
     """
 
     def __init__(
-        self, model_dir: str, maxsize: int = 1, *args: Any, **kwargs: Any
+        self, model_dir: str, max_size: int = 1, *args: Any, **kwargs: Any
     ) -> None:
         self.model_dir = Path(model_dir).resolve()
-        self.maxsize = maxsize
+        self.max_size = max_size
         super().__init__(*args, **kwargs)
 
     def latest(self) -> dict:
@@ -71,21 +71,24 @@ class LRUModelContainer(OrderedDict):
         logger.info(f"loading model version {version}")
         model_file = self._read_model_file(version)
         model = self._unpickle_model_file(model_file)
+        self._insert_model(version=version, model=model)
 
+    def _insert_model(self, version: Any, model: Any) -> None:
         if version in self:
             self.move_to_end(version)
 
         super().__setitem__(version, model)
 
-        if len(self) > self.maxsize:
+        if len(self) > self.max_size:
             oldest = next(iter(self))
             logger.info(f"dropping model version {oldest}")
             del self[oldest]
 
     def _find_latest_version(self) -> int:
-        model_file = sorted(self.model_dir.glob("*.model")).pop()
-        if not model_file:
+        model_files = sorted(self.model_dir.glob("*.model"))
+        if not model_files:
             raise FileNotFoundError(f"model folder {self.model_dir} is empty")
+        model_file = model_files.pop()
         return int(model_file.stem)
 
     def _read_model_file(self, version: int) -> Path:
@@ -94,7 +97,8 @@ class LRUModelContainer(OrderedDict):
             raise FileNotFoundError(model_file)
         return model_file
 
-    def _unpickle_model_file(self, model_file: Path) -> dict:
+    @staticmethod
+    def _unpickle_model_file(model_file: Path) -> dict:
         bst = xgb.Booster()
         bst.load_model(model_file)
         model = {"model": bst}
