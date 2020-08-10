@@ -25,3 +25,9 @@ jobs:
       - name: Checking format with clack
         run: |
           black --check
+      - name: Test with pytest
+        run: |
+          pytest --cov-report term --cov=app
+        env:
+          PYTHONPATH: .
+          MODEL_DIR: tests/test_models
