@@ -67,6 +67,8 @@ At last, there are managed model serving platforms that help to serve the models
 
 In terms of transfroming data, in this example I only use scikit learn and pandas. If the size of data is larger, we can also use Spark to run transformation. Spark also has XGBoost algorithm, so it can also be used to run batch prediction, like what [Uber does](https://eng.uber.com/productionizing-distributed-xgboost/).
 
+And because the example is small, so I wrote my own `pipe()` method to handle dependencies. If the preprocessing is complicated, we can use Airflow, AWS step functions, AWS batch or other orchestration tools for this job.
+
 Usually, the cloud platform also provides the monitoring and logging service, for example, CloudWatch and Stackdriver. We can use these services to monitor the health of our instances and keeping logs. Or we can use 3rd party services like Datadog or open-source projects like Prometheus.
 
 4. **A description of metrics to capture if the http API had to be instrumented.**
@@ -79,6 +81,7 @@ To monitor the API, we should capture:
 - the amount of data received (bytes)
 - the source of the request, such as IP address and user-agent
 - the payload to check if the data is drifting
+- CPU, memory usage of the app
 
 ## Benchmark
 
